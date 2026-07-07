@@ -1,30 +1,56 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, Button, SearchBar, Avatar, Badge } from '@comp-dash/design-system'
 import { Plus, Download } from 'lucide-react'
-
-const mockStudents = [
-  { id: '1', name: 'Jeevan R', email: 'jeevan.r@citchennai.net', department: 'CSE', year: '3rd Year', section: 'A', registered: 8, verified: 6 },
-  { id: '2', name: 'Kavin Raj', email: 'kavin.r@citchennai.net', department: 'AIDS', year: '3rd Year', section: 'B', registered: 5, verified: 4 },
-  { id: '3', name: 'Harini S', email: 'harini.s@citchennai.net', department: 'IT', year: '2nd Year', section: 'A', registered: 3, verified: 3 },
-  { id: '4', name: 'Yuvanaj G', email: 'yuvanaj.g@citchennai.net', department: 'CSE', year: '4th Year', section: 'A', registered: 12, verified: 10 },
-  { id: '5', name: 'Pranav M', email: 'pranav.m@citchennai.net', department: 'CSE', year: '3rd Year', section: 'C', registered: 6, verified: 5 },
-]
+import { mockStore } from '@/lib/mockData'
+import { exportToCSV } from '@/lib/export'
+import { AddStudentModal } from '@/components/modals/AddStudentModal'
 
 export default function StudentsPage() {
   const { t } = useTranslation()
+  const [search, setSearch] = useState('')
+  const [addOpen, setAddOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const students = mockStore.getStudents()
+  const filtered = search
+    ? students.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase()) || s.department.toLowerCase().includes(search.toLowerCase()))
+    : students
+
+  const handleAdd = (data: Parameters<typeof mockStore.addStudent>[0]) => {
+    mockStore.addStudent(data)
+    setRefreshKey(k => k + 1)
+    setAddOpen(false)
+  }
+
+  const handleExport = () => {
+    exportToCSV(
+      filtered.map(s => ({ ...s })),
+      'students',
+      [
+        { key: 'name', label: 'Name' },
+        { key: 'email', label: 'Email' },
+        { key: 'department', label: 'Department' },
+        { key: 'year', label: 'Year' },
+        { key: 'section', label: 'Section' },
+        { key: 'registered', label: 'Registered' },
+        { key: 'verified', label: 'Verified' },
+      ]
+    )
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">{t('sidebar.students')}</h1>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button variant="primary" size="sm">
+          <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Student
           </Button>
@@ -32,7 +58,12 @@ export default function StudentsPage() {
       </div>
 
       <Card padding="md">
-        <SearchBar placeholder="Search students..." />
+        <SearchBar
+          placeholder="Search students..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onClear={() => setSearch('')}
+        />
       </Card>
 
       <Card>
@@ -49,7 +80,7 @@ export default function StudentsPage() {
               </tr>
             </thead>
             <tbody>
-              {mockStudents.map((student) => (
+              {filtered.map((student) => (
                 <tr key={student.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -67,10 +98,17 @@ export default function StudentsPage() {
                   <td className="px-6 py-4 text-right"><Button variant="ghost" size="sm">View</Button></td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-gray-500">No students found</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </Card>
+
+      <AddStudentModal open={addOpen} onClose={() => setAddOpen(false)} onSubmit={handleAdd} />
     </div>
   )
 }

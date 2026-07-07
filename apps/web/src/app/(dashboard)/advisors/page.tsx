@@ -1,49 +1,54 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, Button, SearchBar, Avatar, Badge } from '@comp-dash/design-system'
 import { Plus, Download } from 'lucide-react'
-
-const mockAdvisors = [
-  {
-    id: '1',
-    name: 'Dr. Priya Sharma',
-    email: 'priya.sharma@citchennai.net',
-    department: 'CSE',
-    assignedSections: ['3A', '3B', '3C'],
-    pendingVerifications: 4,
-  },
-  {
-    id: '2',
-    name: 'Mr. Arun Kumar',
-    email: 'arun.kumar@citchennai.net',
-    department: 'IT',
-    assignedSections: ['2A', '2B'],
-    pendingVerifications: 2,
-  },
-  {
-    id: '3',
-    name: 'Dr. Meena Raj',
-    email: 'meena.raj@citchennai.net',
-    department: 'AIDS',
-    assignedSections: ['4A', '4B'],
-    pendingVerifications: 7,
-  },
-]
+import { mockStore } from '@/lib/mockData'
+import { exportToCSV } from '@/lib/export'
+import { AddAdvisorModal } from '@/components/modals/AddAdvisorModal'
 
 export default function AdvisorsPage() {
   const { t } = useTranslation()
+  const [search, setSearch] = useState('')
+  const [addOpen, setAddOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const advisors = mockStore.getAdvisors()
+  const filtered = search
+    ? advisors.filter(a => a.name.toLowerCase().includes(search.toLowerCase()) || a.email.toLowerCase().includes(search.toLowerCase()) || a.department.toLowerCase().includes(search.toLowerCase()))
+    : advisors
+
+  const handleAdd = (data: Parameters<typeof mockStore.addAdvisor>[0]) => {
+    mockStore.addAdvisor(data)
+    setRefreshKey(k => k + 1)
+    setAddOpen(false)
+  }
+
+  const handleExport = () => {
+    exportToCSV(
+      filtered.map(a => ({ ...a, assignedSections: a.assignedSections.join(' ') })),
+      'advisors',
+      [
+        { key: 'name', label: 'Name' },
+        { key: 'email', label: 'Email' },
+        { key: 'department', label: 'Department' },
+        { key: 'assignedSections', label: 'Assigned Sections' },
+        { key: 'pendingVerifications', label: 'Pending Verifications' },
+      ]
+    )
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">{t('sidebar.advisors')}</h1>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button variant="primary" size="sm">
+          <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Advisor
           </Button>
@@ -51,7 +56,12 @@ export default function AdvisorsPage() {
       </div>
 
       <Card padding="md">
-        <SearchBar placeholder="Search advisors..." />
+        <SearchBar
+          placeholder="Search advisors..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onClear={() => setSearch('')}
+        />
       </Card>
 
       <Card>
@@ -67,7 +77,7 @@ export default function AdvisorsPage() {
               </tr>
             </thead>
             <tbody>
-              {mockAdvisors.map((advisor) => (
+              {filtered.map((advisor) => (
                 <tr key={advisor.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -94,10 +104,17 @@ export default function AdvisorsPage() {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-12 text-gray-500">No advisors found</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </Card>
+
+      <AddAdvisorModal open={addOpen} onClose={() => setAddOpen(false)} onSubmit={handleAdd} />
     </div>
   )
 }

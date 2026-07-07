@@ -82,7 +82,7 @@ export function StatCardSkeleton() {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
       <Skeleton variant="text" width="half" />
       <Skeleton variant="title" width="third" className="mt-2" />
-      <Skeleton variant="text" width="twothirds" className="mt-2" />
+      <Skeleton variant="text" width="threequarters" className="mt-2" />
     </div>
   )
 }
@@ -107,7 +107,7 @@ export function ListSkeleton({ count = 5 }: { count?: number }) {
 export function ProfileSkeleton() {
   return (
     <div className="flex flex-col items-center space-y-4 p-6">
-      <Skeleton variant="avatar" width="3xl" height={96} />
+      <Skeleton variant="avatar" width="lg" height={96} />
       <Skeleton variant="heading" width="half" />
       <Skeleton variant="text" width="third" />
       <div className="flex gap-8 mt-4">

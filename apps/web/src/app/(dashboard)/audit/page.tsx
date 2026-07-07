@@ -3,91 +3,50 @@
 import { useTranslation } from 'react-i18next'
 import { Card, Button, Badge } from '@comp-dash/design-system'
 import { Download, FileText } from 'lucide-react'
+import { exportToCSV } from '@/lib/export'
 
 const mockAuditLogs = [
-  {
-    id: '1',
-    timestamp: '2025-07-03 14:32:10',
-    user: 'Dr. Priya Sharma',
-    action: 'Verified',
-    resource: 'Registration #1247',
-    details: 'Verified registration for HackFusion 2025',
-  },
-  {
-    id: '2',
-    timestamp: '2025-07-03 13:15:45',
-    user: 'Admin',
-    action: 'Created',
-    resource: 'Competition #89',
-    details: 'Created new competition: AI Innovation Challenge',
-  },
-  {
-    id: '3',
-    timestamp: '2025-07-03 11:20:30',
-    user: 'Mr. Arun Kumar',
-    action: 'Rejected',
-    resource: 'Registration #1239',
-    details: 'Rejected registration - incomplete documents',
-  },
-  {
-    id: '4',
-    timestamp: '2025-07-02 16:45:00',
-    user: 'Admin',
-    action: 'Updated',
-    resource: 'Department CSE',
-    details: 'Updated department advisor assignment',
-  },
-  {
-    id: '5',
-    timestamp: '2025-07-02 10:30:15',
-    user: 'Dr. Meena Raj',
-    action: 'Verified',
-    resource: 'Registration #1235',
-    details: 'Verified registration for Code Blitz',
-  },
-  {
-    id: '6',
-    timestamp: '2025-07-01 15:10:22',
-    user: 'Admin',
-    action: 'Deleted',
-    resource: 'Competition #85',
-    details: 'Removed cancelled workshop competition',
-  },
-  {
-    id: '7',
-    timestamp: '2025-07-01 09:05:40',
-    user: 'Mr. Arun Kumar',
-    action: 'Verified',
-    resource: 'Registration #1228',
-    details: 'Verified registration for Tech Summit',
-  },
-  {
-    id: '8',
-    timestamp: '2025-06-30 14:20:18',
-    user: 'Admin',
-    action: 'Created',
-    resource: 'Advisor #12',
-    details: 'Added new advisor: Dr. Meena Raj',
-  },
+  { id: '1', timestamp: '2025-07-03 14:32:10', user: 'Dr. Priya Sharma', action: 'Verified', resource: 'Registration #1247', details: 'Verified registration for HackFusion 2025' },
+  { id: '2', timestamp: '2025-07-03 13:15:45', user: 'Admin', action: 'Created', resource: 'Competition #89', details: 'Created new competition: AI Innovation Challenge' },
+  { id: '3', timestamp: '2025-07-03 11:20:30', user: 'Mr. Arun Kumar', action: 'Rejected', resource: 'Registration #1239', details: 'Rejected registration - incomplete documents' },
+  { id: '4', timestamp: '2025-07-02 16:45:00', user: 'Admin', action: 'Updated', resource: 'Department CSE', details: 'Updated department advisor assignment' },
+  { id: '5', timestamp: '2025-07-02 10:30:15', user: 'Dr. Meena Raj', action: 'Verified', resource: 'Registration #1235', details: 'Verified registration for Code Blitz' },
+  { id: '6', timestamp: '2025-07-01 15:10:22', user: 'Admin', action: 'Deleted', resource: 'Competition #85', details: 'Removed cancelled workshop competition' },
+  { id: '7', timestamp: '2025-07-01 09:05:40', user: 'Mr. Arun Kumar', action: 'Verified', resource: 'Registration #1228', details: 'Verified registration for Tech Summit' },
+  { id: '8', timestamp: '2025-06-30 14:20:18', user: 'Admin', action: 'Created', resource: 'Advisor #12', details: 'Added new advisor: Dr. Meena Raj' },
 ]
 
-const actionColors: Record<string, 'verified' | 'primary' | 'rejected' | 'secondary'> = {
-  Verified: 'verified',
+const actionColors: Record<string, 'success' | 'primary' | 'danger' | 'secondary'> = {
+  Verified: 'success',
   Created: 'primary',
-  Rejected: 'rejected',
+  Rejected: 'danger',
   Updated: 'secondary',
-  Deleted: 'rejected',
+  Deleted: 'danger',
 }
 
 export default function AuditPage() {
   const { t } = useTranslation()
+
+  const handleExport = () => {
+    exportToCSV(
+      mockAuditLogs.map(l => ({ ...l })),
+      'audit-logs',
+      [
+        { key: 'timestamp', label: 'Timestamp' },
+        { key: 'user', label: 'User' },
+        { key: 'action', label: 'Action' },
+        { key: 'resource', label: 'Resource' },
+        { key: 'details', label: 'Details' },
+      ]
+    )
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">{t('sidebar.auditLogs')}</h1>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export Logs
           </Button>

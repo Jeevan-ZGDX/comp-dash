@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { cn } from '@comp-dash/design-system'
 import { Avatar } from '@comp-dash/design-system'
 import {
@@ -16,8 +17,7 @@ import {
   Bell,
   Settings,
   FileText,
-  ChevronLeft,
-  ChevronRight,
+  LogOut,
 } from 'lucide-react'
 
 const navItems = [
@@ -41,6 +41,8 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
+  const { user } = useUser()
+  const { signOut } = useClerk()
 
   return (
     <>
@@ -93,11 +95,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         {/* User Card */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
           <div className="flex items-center gap-3 p-2">
-            <Avatar name="Dr. S. Rajkumar" size="md" />
+            <Avatar name={user?.fullName || 'Admin'} size="md" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">Dr. S. Rajkumar</p>
-              <p className="text-xs text-gray-500">COE</p>
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.fullName || 'Admin'}
+              </p>
+              <p className="text-xs text-gray-500">
+                {user?.primaryEmailAddress?.emailAddress || ''}
+              </p>
             </div>
+            <button
+              onClick={() => signOut({ redirectUrl: '/sign-in' })}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Sign out"
+            >
+              <LogOut className="w-4 h-4 text-gray-400" />
+            </button>
           </div>
         </div>
       </aside>

@@ -1,61 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, Button, Avatar, Badge } from '@comp-dash/design-system'
-import { Trophy, Download } from 'lucide-react'
-
-const mockWinners = [
-  {
-    id: '1',
-    studentName: 'Jeevan R',
-    email: 'jeevan.r@citchennai.net',
-    competition: 'HackFusion 2025',
-    department: 'CSE',
-    position: '1st',
-    prize: '₹50,000',
-    date: '2025-06-15',
-  },
-  {
-    id: '2',
-    studentName: 'Kavin Raj',
-    email: 'kavin.r@citchennai.net',
-    competition: 'AI Innovation Challenge',
-    department: 'AIDS',
-    position: '2nd',
-    prize: '₹25,000',
-    date: '2025-05-20',
-  },
-  {
-    id: '3',
-    studentName: 'Harini S',
-    email: 'harini.s@citchennai.net',
-    competition: 'Code Blitz',
-    department: 'IT',
-    position: '1st',
-    prize: '₹30,000',
-    date: '2025-05-10',
-  },
-  {
-    id: '4',
-    studentName: 'Yuvanaj G',
-    email: 'yuvanaj.g@citchennai.net',
-    competition: 'Tech Summit Hackathon',
-    department: 'CSE',
-    position: '3rd',
-    prize: '₹10,000',
-    date: '2025-04-28',
-  },
-  {
-    id: '5',
-    studentName: 'Pranav M',
-    email: 'pranav.m@citchennai.net',
-    competition: 'IEEE Paper Presentation',
-    department: 'CSE',
-    position: '1st',
-    prize: '₹15,000',
-    date: '2025-04-12',
-  },
-]
+import { Trophy, Download, Plus } from 'lucide-react'
+import { mockStore } from '@/lib/mockData'
+import { exportToCSV } from '@/lib/export'
+import { AddWinnerModal } from '@/components/modals/AddWinnerModal'
 
 const positionColors: Record<string, 'warning' | 'secondary' | 'primary'> = {
   '1st': 'warning',
@@ -65,15 +16,45 @@ const positionColors: Record<string, 'warning' | 'secondary' | 'primary'> = {
 
 export default function WinnersPage() {
   const { t } = useTranslation()
+  const [addOpen, setAddOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const winners = mockStore.getWinners()
+
+  const handleAdd = (data: Parameters<typeof mockStore.addWinner>[0]) => {
+    mockStore.addWinner(data)
+    setRefreshKey(k => k + 1)
+    setAddOpen(false)
+  }
+
+  const handleExport = () => {
+    exportToCSV(
+      winners.map(w => ({ ...w })),
+      'winners',
+      [
+        { key: 'studentName', label: 'Student Name' },
+        { key: 'email', label: 'Email' },
+        { key: 'competition', label: 'Competition' },
+        { key: 'department', label: 'Department' },
+        { key: 'position', label: 'Position' },
+        { key: 'prize', label: 'Prize' },
+        { key: 'date', label: 'Date' },
+      ]
+    )
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">{t('sidebar.winners')}</h1>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Winner
           </Button>
         </div>
       </div>
@@ -92,7 +73,7 @@ export default function WinnersPage() {
               </tr>
             </thead>
             <tbody>
-              {mockWinners.map((winner) => (
+              {winners.map((winner) => (
                 <tr key={winner.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -121,10 +102,17 @@ export default function WinnersPage() {
                   </td>
                 </tr>
               ))}
+              {winners.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-gray-500">No winners recorded</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </Card>
+
+      <AddWinnerModal open={addOpen} onClose={() => setAddOpen(false)} onSubmit={handleAdd} />
     </div>
   )
 }
